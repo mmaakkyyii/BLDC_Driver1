@@ -61,7 +61,6 @@
 
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim14;
-extern DMA_HandleTypeDef hdma_usart1_rx;
 extern DMA_HandleTypeDef hdma_usart1_tx;
 extern UART_HandleTypeDef huart1;
 /* USER CODE BEGIN EV */
@@ -155,7 +154,6 @@ void DMA1_Channel2_3_IRQHandler(void)
 
   /* USER CODE END DMA1_Channel2_3_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_usart1_tx);
-  HAL_DMA_IRQHandler(&hdma_usart1_rx);
   /* USER CODE BEGIN DMA1_Channel2_3_IRQn 1 */
 
   /* USER CODE END DMA1_Channel2_3_IRQn 1 */
@@ -168,6 +166,7 @@ void TIM14_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM14_IRQn 0 */
 	static int v=1000;
+	v=conf_v(-1);
 	static float t=0;
 //	v++;
 //	if(v>4799/2)v=0;

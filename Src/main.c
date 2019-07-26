@@ -60,6 +60,34 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+int conf_v(int _v){
+	static int v=0;
+	if(_v>0)v=_v;
+
+	return v;
+}
+
+char UART1_Data;
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+	static int v=0;
+     if(UartHandle->Instance==USART1){
+          HAL_UART_Receive_IT(&huart1, (uint8_t*) &UART1_Data, 1);
+          switch(UART1_Data){
+          case 'q':
+        	  if(v<4000)v+=50;
+        	  conf_v(v);
+        	  break;
+          case 'z':
+        	  if(v>51)v-=50;
+        	  conf_v(v);
+        	  break;
+          }
+     }
+}
+
 void Debug(char* data,int size){
 	HAL_UART_Transmit_DMA(&huart1,(uint8_t *)data,(uint16_t)size);
 }
@@ -153,6 +181,8 @@ int main(void)
 
     HAL_TIM_Base_Start_IT(&htim14);
 
+    HAL_UART_Receive_IT(&huart1, (uint8_t*) &UART1_Data, 1);
+
 
   int neko=0;
   //OC protection selection
@@ -175,7 +205,7 @@ int main(void)
 	  int h2=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3);
 	  int h3=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4);
 
-	  int n=sprintf(po,"%d,%d,%d\r\n",h1,h2,h3);
+	  int n=sprintf(po,"%d,%d,%d,%d\r\n",h1,h2,h3,conf_v(-1));
 	  Debug(po, n);
   }
   /* USER CODE END 3 */
