@@ -33,6 +33,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+ADC_ChannelConfTypeDef adc_sConfig;
 
 /* USER CODE END PTD */
 
@@ -49,6 +50,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+#define ADC_CONVERTED_DATA_BUFFER_SIZE ((uint16_t)3)
+
+static uint16_t aADCxConvertedData[ADC_CONVERTED_DATA_BUFFER_SIZE];
 
 /* USER CODE END PV */
 
@@ -68,6 +72,8 @@ int conf_v(int _v){
 	return v;
 }
 
+
+
 char UART1_Data;
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
@@ -81,7 +87,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
         	  conf_v(v);
         	  break;
           case 'z':
-        	  if(v>51)v-=50;
+        	  if(v>=50)v-=50;
         	  conf_v(v);
         	  break;
           }
@@ -91,6 +97,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 void Debug(char* data,int size){
 	HAL_UART_Transmit_DMA(&huart1,(uint8_t *)data,(uint16_t)size);
 }
+
+HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc){
+	HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_1);
+}
+
 
 void pwm_setvalue(uint16_t value,uint8_t ch)//0<value<4799
 {
@@ -179,10 +190,15 @@ int main(void)
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
     HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
 
-    HAL_TIM_Base_Start_IT(&htim14);
+//    HAL_TIM_GenerateEvent(&htim1,TIM_EVENTSOURVE_UPDATE);
+
+	HAL_TIM_Base_Start_IT(&htim14);
 
     HAL_UART_Receive_IT(&huart1, (uint8_t*) &UART1_Data, 1);
 
+    HAL_ADC_Init(&hadc);
+    HAL_ADCEx_Calibration_Start(&hadc);
+    HAL_ADC_Start_DMA(&hadc,(uint32_t *)aADCxConvertedData,ADC_CONVERTED_DATA_BUFFER_SIZE);
 
   int neko=0;
   //OC protection selection
@@ -204,9 +220,10 @@ int main(void)
 	  int h1=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2);
 	  int h2=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3);
 	  int h3=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4);
-
-	  int n=sprintf(po,"%d,%d,%d,%d\r\n",h1,h2,h3,conf_v(-1));
+	  int n=sprintf(po,"%d,%d,%d\r\n",aADCxConvertedData[0],aADCxConvertedData[1],aADCxConvertedData[2]);
 	  Debug(po, n);
+
+	  HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }

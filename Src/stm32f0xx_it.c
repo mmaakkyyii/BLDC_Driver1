@@ -26,7 +26,7 @@
 #include "gpio.h"
 #define ARM_MATH_CM0
 #include "arm_math.h"
-
+#include "math.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -60,6 +60,8 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+extern DMA_HandleTypeDef hdma_adc;
+extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim14;
 extern DMA_HandleTypeDef hdma_usart1_tx;
 extern UART_HandleTypeDef huart1;
@@ -146,6 +148,20 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
+  * @brief This function handles DMA1 channel 1 interrupt.
+  */
+void DMA1_Channel1_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
+
+  /* USER CODE END DMA1_Channel1_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_adc);
+  /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
+
+  /* USER CODE END DMA1_Channel1_IRQn 1 */
+}
+
+/**
   * @brief This function handles DMA1 channel 2 and 3 interrupts.
   */
 void DMA1_Channel2_3_IRQHandler(void)
@@ -160,6 +176,20 @@ void DMA1_Channel2_3_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles TIM1 break, update, trigger and commutation interrupts.
+  */
+void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM1_BRK_UP_TRG_COM_IRQn 0 */
+
+  /* USER CODE END TIM1_BRK_UP_TRG_COM_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim1);
+  /* USER CODE BEGIN TIM1_BRK_UP_TRG_COM_IRQn 1 */
+
+  /* USER CODE END TIM1_BRK_UP_TRG_COM_IRQn 1 */
+}
+
+/**
   * @brief This function handles TIM14 global interrupt.
   */
 void TIM14_IRQHandler(void)
@@ -171,7 +201,6 @@ void TIM14_IRQHandler(void)
 //	v++;
 //	if(v>4799/2)v=0;
 	float f=1;
-
 //    for(int i=1;i<=3;i++){
 ////    	duty=V/250.0f*(100+100*arm_sin_f32((t*2*3.14*f)+(2-i)*(2.0f/3.0f*3.14f) ));
 //    	int duty=v/4799*(100+100*arm_sin_f32((t*2*3.14*f)+(2-i)*(2.0f/3.0f*3.14f) ));
