@@ -23,10 +23,12 @@
 #include "stm32f0xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "adc.h"
+#include "tim.h"
 #include "gpio.h"
-#define ARM_MATH_CM0
-#include "arm_math.h"
-#include "math.h"
+#include "usart.h"
+#include "my_val.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,22 +48,49 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
+char debug_data[20]={};
+void Debug(char* data,int size){
+	HAL_UART_Transmit_DMA(&huart1,(uint8_t *)data,(uint16_t)size);
+}
+
+
+//sin(deg)*100
+const int sin_val[90]={0 ,2 ,3 ,5 ,7 ,9 ,10 ,12 ,14 ,16 ,17 ,19 ,21 ,22 ,24 ,26 ,28 ,29 ,31 ,33 ,34 ,36 ,37 ,39 ,41 ,42 ,44 ,45 ,47 ,48 ,50 ,52 ,53 ,54 ,56 ,57 ,59 ,60 ,62 ,63 ,64 ,66 ,67 ,68 ,69 ,71 ,72 ,73 ,74 ,75 ,77 ,78 ,79 ,80 ,81 ,82 ,83 ,84 ,85 ,86 ,87 ,87 ,88 ,89 ,90 ,91 ,91 ,92 ,93 ,93 ,94 ,95 ,95 ,96 ,96 ,97 ,97 ,97 ,98 ,98 ,98 ,99 ,99 ,99 ,99 ,100 ,100 ,100 ,100 ,100 };
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
 
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+int my_sin(int deg){
+	if(deg>=0){
+		while(deg>360){
+			deg=-360;
+		}
+	}else{
+		while(deg<0){
+			deg=deg+360;
+		}
+	}
+	if(deg<0)return 0;
+	else if(deg<90)return sin_val[deg];
+	else if(deg==90)return 1000;
+	else if(deg<=180)return sin_val[180-deg];
+	else if(deg<270)return -sin_val[deg-180];
+	else if(deg==270)return -1000;
+	else if(deg<=360)return -sin_val[360-deg];
+	else return 0;
 
+}
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc;
-extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim14;
 extern DMA_HandleTypeDef hdma_usart1_tx;
 extern UART_HandleTypeDef huart1;
@@ -153,7 +182,9 @@ void SysTick_Handler(void)
 void DMA1_Channel1_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
-
+//	HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_1);
+//	HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_1);
+    HAL_ADC_Start_DMA(&hadc,(uint32_t *)aADCxConvertedData,3);
   /* USER CODE END DMA1_Channel1_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_adc);
   /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
@@ -176,42 +207,47 @@ void DMA1_Channel2_3_IRQHandler(void)
 }
 
 /**
-  * @brief This function handles TIM1 break, update, trigger and commutation interrupts.
-  */
-void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
-{
-  /* USER CODE BEGIN TIM1_BRK_UP_TRG_COM_IRQn 0 */
-
-  /* USER CODE END TIM1_BRK_UP_TRG_COM_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim1);
-  /* USER CODE BEGIN TIM1_BRK_UP_TRG_COM_IRQn 1 */
-
-  /* USER CODE END TIM1_BRK_UP_TRG_COM_IRQn 1 */
-}
-
-/**
   * @brief This function handles TIM14 global interrupt.
   */
+
 void TIM14_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM14_IRQn 0 */
+
+	static const int16_t ENC_ZERO=0x7FFF;
+
+	HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_1);
+
+
+	int16_t pulse=TIM2->CNT-ENC_ZERO;
+	TIM2->CNT=ENC_ZERO;
+
+	//  int n=sprintf(debug_data,"%d,%d,%d\r\n",aADCxConvertedData[0],aADCxConvertedData[1],aADCxConvertedData[2]);
+	  int n=sprintf(debug_data,"%d\r\n",(int)pulse);
+	  Debug(debug_data, n);
+
+
 	static int v=1000;
 	v=conf_v(-1);
+	v=1000;
 	static float t=0;
 //	v++;
 //	if(v>4799/2)v=0;
-	float f=1;
-//    for(int i=1;i<=3;i++){
-////    	duty=V/250.0f*(100+100*arm_sin_f32((t*2*3.14*f)+(2-i)*(2.0f/3.0f*3.14f) ));
-//    	int duty=v/4799*(100+100*arm_sin_f32((t*2*3.14*f)+(2-i)*(2.0f/3.0f*3.14f) ));
-//
-//    	pwm_setvalue((uint16_t)duty,i);
-//    }
-//    t+=0.001;
-//    if(t>1.0f/f){
-//    	t=0;
-//    }
-
+	int f=2;
+	int sin_v=0;
+	int a=479;//max 4799
+/*
+	for(int i=1;i<=3;i++){
+    	//duty=V/250.0f*(100+100*sin((t*2*3.14*f)+(2-i)*(2.0f/3.0f*3.14f) ));
+    	sin_v=my_sin( ( (t*360*f)+(2-i)*(120) ));
+    	int duty=a*(100+sin_v)/100.0f;
+    	pwm_setvalue((uint16_t)duty,i);
+    }
+    t+=0.001;
+    if(t*f>1){
+    	t=0;
+    }
+*/
 
   int h3=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2);
   int h1=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3);
@@ -258,8 +294,6 @@ void TIM14_IRQHandler(void)
 		break;
 
   }
-
-
 
 
   /* USER CODE END TIM14_IRQn 0 */
