@@ -70,7 +70,7 @@ const int sin_val[90]={0 ,2 ,3 ,5 ,7 ,9 ,10 ,12 ,14 ,16 ,17 ,19 ,21 ,22 ,24 ,26 
 int my_sin(int deg){
 	if(deg>=0){
 		while(deg>360){
-			deg=-360;
+			deg=deg-360;
 		}
 	}else{
 		while(deg<0){
@@ -79,10 +79,10 @@ int my_sin(int deg){
 	}
 	if(deg<0)return 0;
 	else if(deg<90)return sin_val[deg];
-	else if(deg==90)return 1000;
+	else if(deg==90)return 100;
 	else if(deg<=180)return sin_val[180-deg];
 	else if(deg<270)return -sin_val[deg-180];
-	else if(deg==270)return -1000;
+	else if(deg==270)return -100;
 	else if(deg<=360)return -sin_val[360-deg];
 	else return 0;
 
@@ -93,6 +93,7 @@ int my_sin(int deg){
 extern DMA_HandleTypeDef hdma_adc;
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim14;
+extern TIM_HandleTypeDef htim16;
 extern DMA_HandleTypeDef hdma_usart1_tx;
 extern UART_HandleTypeDef huart1;
 /* USER CODE BEGIN EV */
@@ -246,27 +247,25 @@ void TIM14_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM14_IRQn 0 */
 
-	static const int16_t ENC_ZERO=0x7FFF;
-
-	int16_t pulse=TIM2->CNT-ENC_ZERO;
-	TIM2->CNT=ENC_ZERO;
 
 	static int v=0;
-	if(pulse<10&&pulse>-10)conf_v(-conf_v(0,-1),1);
 	v=conf_v(0,-1);
 
 
 	static float t=0;
 //	v++;
 //	if(v>4799/2)v=0;
-/*
-	int f=1;
+//*
+	int f=5;
 	int sin_v=0;
-	int a=1000;//max 4799
+	int a=300;//max 4799
+	f=conf_f(0,-1);
+	a=conf_v(0,-1);
+	int dir=conf_dir(0,-1);
 
 	for(int i=1;i<=3;i++){
     	//duty=V/250.0f*(100+100*sin((t*2*3.14*f)+(2-i)*(2.0f/3.0f*3.14f) ));
-    	sin_v=my_sin( ( (t*360*f)+(2-i)*(120) ));
+    	sin_v=my_sin( ( (dir*t*360*f)+(2-i)*(120) ));
     	int duty=a*(100+sin_v)/100.0f;
     	pwm_setvalue((uint16_t)duty,i);
     }
@@ -274,13 +273,14 @@ void TIM14_IRQHandler(void)
     if(t*f>1){
     	t=0;
     }
-*/
-//*
+
   int h3=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2);
   int h1=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3);
   int h2=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4);
 
   int hall_state=h1+h2*2+h3*4;
+
+/*/
 
   if(v>0){
 	  switch(hall_state){
@@ -360,17 +360,16 @@ void TIM14_IRQHandler(void)
 	  default:
 			pwm_setvalue(0,1);
 			pwm_setvalue(0,2);
-			pwm_setvalue(0,3);
+			pwm_setvaue(0,3);
 			break;
 
 	  }
 
   }
 //*/
-
-  int n=sprintf(debug_data,"%d,%d,%d\r\n",(int)pulse,hall_state,v);
+//  int n=sprintf(debug_data,"%d,%d,%d,%d\r\n",v,f,(int)(t*1000),(int)pulse);
   //int n=sprintf(debug_data,"%d\r\n",(int)pulse);
-  Debug(debug_data, n);
+//  Debug(debug_data, n);
 
 
   /* USER CODE END TIM14_IRQn 0 */
@@ -378,6 +377,30 @@ void TIM14_IRQHandler(void)
   /* USER CODE BEGIN TIM14_IRQn 1 */
 
   /* USER CODE END TIM14_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM16 global interrupt.
+  */
+void TIM16_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM16_IRQn 0 */
+	static const int16_t ENC_ZERO=0x7FFF;
+
+	int16_t pulse=TIM2->CNT-ENC_ZERO;
+	TIM2->CNT=ENC_ZERO;
+//	if(pulse<10&&pulse>-10)conf_v(-conf_v(0,-1),1);
+
+
+	int n=sprintf(debug_data,"%d,%d,%d\r\n",conf_v(0,-1),conf_f(0,-1),(int)pulse);
+//	int n=sprintf(debug_data,"%d\r\n",(int)pulse);
+	Debug(debug_data, n);
+
+  /* USER CODE END TIM16_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim16);
+  /* USER CODE BEGIN TIM16_IRQn 1 */
+
+  /* USER CODE END TIM16_IRQn 1 */
 }
 
 /**

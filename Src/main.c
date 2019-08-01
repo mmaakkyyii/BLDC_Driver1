@@ -63,13 +63,28 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-#define init_v (250)
+#define init_v (0)
+#define init_f (1)
+#define init_dir (1)
+
+int conf_dir(int _dir,int set){
+	static int dir=1;
+	if(set==1)dir=_dir;
+
+	return dir;
+}
 
 int conf_v(int _v,int set){
 	static int v=init_v;
 	if(set==1)v=_v;
 
 	return v;
+}
+int conf_f(int _f,int set){
+	static int f=init_f;
+	if(set==1)f=_f;
+
+	return f;
 }
 
 
@@ -79,9 +94,24 @@ char UART1_Data;
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
 	static int v=init_v;
+	static int f=init_f;
+	static int dir=init_dir;
      if(UartHandle->Instance==USART1){
           HAL_UART_Receive_IT(&huart1, (uint8_t*) &UART1_Data, 1);
           switch(UART1_Data){
+          case 'e':
+        	  if(f<50)f+=1;
+        	  conf_f(f,1);
+        	  break;
+          case 'c':
+        	  if(f>-50)f-=1;
+        	  else v=0;
+        	  conf_f(f,1);
+        	  break;
+          case 'd':
+        	  f=init_f;
+        	  conf_f(f,1);
+        	  break;
           case 'q':
         	  if(v<4000)v+=2;
         	  conf_v(v,1);
@@ -103,6 +133,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
           case 'a':
         	  v=0;
         	  conf_v(v,1);
+        	  break;
+          case 'r':
+        	  dir=1;
+        	  conf_dir(dir,1);
+        	  break;
+          case 'v':
+        	  dir=-1;
+        	  conf_dir(dir,1);
         	  break;
           }
      }
@@ -183,6 +221,7 @@ int main(void)
   MX_TIM2_Init();
   MX_USART1_UART_Init();
   MX_TIM14_Init();
+  MX_TIM16_Init();
   /* USER CODE BEGIN 2 */
 
 
@@ -204,6 +243,7 @@ int main(void)
 
 	HAL_TIM_Base_Start_IT(&htim1);
 	HAL_TIM_Base_Start_IT(&htim14);
+	HAL_TIM_Base_Start_IT(&htim16);
 
     HAL_UART_Receive_IT(&huart1, (uint8_t*) &UART1_Data, 1);
 
