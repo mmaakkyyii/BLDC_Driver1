@@ -63,9 +63,9 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-int conf_v(int _v){
+int conf_v(int _v,int set){
 	static int v=0;
-	if(_v>0)v=_v;
+	if(set==1)v=_v;
 
 	return v;
 }
@@ -81,13 +81,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
           HAL_UART_Receive_IT(&huart1, (uint8_t*) &UART1_Data, 1);
           switch(UART1_Data){
           case 'q':
-        	  if(v<4000)v+=10;
-        	  conf_v(v);
+        	  if(v<4000)v+=30;
+        	  conf_v(v,1);
         	  break;
           case 'z':
-        	  if(v>0)v-=10;
+        	  if(v>-4000)v-=30;
         	  else v=0;
-        	  conf_v(v);
+        	  conf_v(v,1);
+        	  break;
+          case 'a':
+        	  v=0;
+        	  conf_v(v,1);
         	  break;
           }
      }

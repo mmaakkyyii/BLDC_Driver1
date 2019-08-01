@@ -252,11 +252,12 @@ void TIM14_IRQHandler(void)
 	TIM2->CNT=ENC_ZERO;
 
 	static int v=1000;
-	v=conf_v(-1);
+	v=conf_v(0,-1);
 
 	static float t=0;
 //	v++;
 //	if(v>4799/2)v=0;
+/*
 	int f=1;
 	int sin_v=0;
 	int a=1000;//max 4799
@@ -271,51 +272,96 @@ void TIM14_IRQHandler(void)
     if(t*f>1){
     	t=0;
     }
-
-/*
+*/
+//*
   int h3=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2);
   int h1=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3);
   int h2=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4);
 
   int hall_state=h1+h2*2+h3*4;
 
-  switch(hall_state){
-  case 0b101:
-		pwm_setvalue(v,1);
-		pwm_setvalue(0,2);
-		pwm_setvalue(v,3);
-		break;
-  case 0b100:
-		pwm_setvalue(v,1);
-		pwm_setvalue(v,2);
-		pwm_setvalue(0,3);
-		break;
-  case 0b110:
-		pwm_setvalue(v,1);
-		pwm_setvalue(v,2);
-		pwm_setvalue(0,3);
-		break;
-  case 0b010:
-		pwm_setvalue(0,1);
-		pwm_setvalue(v,2);
-		pwm_setvalue(v,3);
-		break;
-  case 0b011:
-		pwm_setvalue(0,1);
-		pwm_setvalue(v,2);
-		pwm_setvalue(v,3);
-		break;
-  case 0b001:
-		pwm_setvalue(v,1);
-		pwm_setvalue(0,2);
-		pwm_setvalue(v,3);
-		break;
+  if(v>0){
+	  switch(hall_state){
+	  case 0b101:
+			pwm_setvalue(0,1);
+			pwm_setvalue(v,2);
+			pwm_setvalue(0,3);
+			break;
+	  case 0b100:
+			pwm_setvalue(0,1);
+			pwm_setvalue(0,2);
+			pwm_setvalue(v,3);
+			break;
+	  case 0b110:
 
-  default:
-		pwm_setvalue(0,1);
-		pwm_setvalue(0,2);
-		pwm_setvalue(0,3);
-		break;
+			pwm_setvalue(0,1);
+			pwm_setvalue(0,2);
+			pwm_setvalue(v,3);
+
+			break;
+	  case 0b010:
+			pwm_setvalue(v,1);
+			pwm_setvalue(0,2);
+			pwm_setvalue(0,3);
+			break;
+	  case 0b011:
+			pwm_setvalue(v,1);
+			pwm_setvalue(0,2);
+			pwm_setvalue(0,3);
+
+			break;
+	  case 0b001:
+			pwm_setvalue(0,1);
+			pwm_setvalue(v,2);
+			pwm_setvalue(0,3);
+			break;
+
+	  default:
+			pwm_setvalue(0,1);
+			pwm_setvalue(0,2);
+			pwm_setvalue(0,3);
+			break;
+	  }
+  }else{
+	  switch(hall_state){
+	  case 0b101:
+			pwm_setvalue(-v,1);
+			pwm_setvalue(0,2);
+			pwm_setvalue(-v,3);
+			break;
+	  case 0b100:
+			pwm_setvalue(-v,1);
+			pwm_setvalue(-v,2);
+			pwm_setvalue(0,3);
+			break;
+	  case 0b110:
+			pwm_setvalue(-v,1);
+			pwm_setvalue(-v,2);
+			pwm_setvalue(0,3);
+			break;
+	  case 0b010:
+			pwm_setvalue(0,1);
+			pwm_setvalue(-v,2);
+			pwm_setvalue(-v,3);
+			break;
+	  case 0b011:
+			pwm_setvalue(0,1);
+			pwm_setvalue(-v,2);
+			pwm_setvalue(-v,3);
+			break;
+	  case 0b001:
+			pwm_setvalue(-v,1);
+			pwm_setvalue(0,2);
+			pwm_setvalue(-v,3);
+			break;
+
+	  default:
+			pwm_setvalue(0,1);
+			pwm_setvalue(0,2);
+			pwm_setvalue(0,3);
+			break;
+
+	  }
 
   }
 //*/
