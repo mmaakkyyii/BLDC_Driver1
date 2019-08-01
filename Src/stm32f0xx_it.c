@@ -91,6 +91,7 @@ int my_sin(int deg){
 
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc;
+extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim14;
 extern DMA_HandleTypeDef hdma_usart1_tx;
 extern UART_HandleTypeDef huart1;
@@ -184,6 +185,8 @@ void DMA1_Channel1_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
 //	HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_1);
 //	HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_1);
+	//HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_1);
+
     HAL_ADC_Start_DMA(&hadc,(uint32_t *)aADCxConvertedData,3);
   /* USER CODE END DMA1_Channel1_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_adc);
@@ -207,36 +210,57 @@ void DMA1_Channel2_3_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles TIM1 break, update, trigger and commutation interrupts.
+  */
+void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM1_BRK_UP_TRG_COM_IRQn 0 */
+	HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_1);
+	HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_1);
+
+  /* USER CODE END TIM1_BRK_UP_TRG_COM_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim1);
+  /* USER CODE BEGIN TIM1_BRK_UP_TRG_COM_IRQn 1 */
+
+  /* USER CODE END TIM1_BRK_UP_TRG_COM_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM1 capture compare interrupt.
+  */
+void TIM1_CC_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM1_CC_IRQn 0 */
+
+  /* USER CODE END TIM1_CC_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim1);
+  /* USER CODE BEGIN TIM1_CC_IRQn 1 */
+
+  /* USER CODE END TIM1_CC_IRQn 1 */
+}
+
+/**
   * @brief This function handles TIM14 global interrupt.
   */
-
 void TIM14_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM14_IRQn 0 */
 
 	static const int16_t ENC_ZERO=0x7FFF;
 
-	HAL_GPIO_TogglePin(GPIOF, GPIO_PIN_1);
-
-
 	int16_t pulse=TIM2->CNT-ENC_ZERO;
 	TIM2->CNT=ENC_ZERO;
 
-	//  int n=sprintf(debug_data,"%d,%d,%d\r\n",aADCxConvertedData[0],aADCxConvertedData[1],aADCxConvertedData[2]);
-	  int n=sprintf(debug_data,"%d\r\n",(int)pulse);
-	  Debug(debug_data, n);
-
-
 	static int v=1000;
 	v=conf_v(-1);
-	v=1000;
+
 	static float t=0;
 //	v++;
 //	if(v>4799/2)v=0;
-	int f=2;
+	int f=1;
 	int sin_v=0;
-	int a=479;//max 4799
-/*
+	int a=1000;//max 4799
+
 	for(int i=1;i<=3;i++){
     	//duty=V/250.0f*(100+100*sin((t*2*3.14*f)+(2-i)*(2.0f/3.0f*3.14f) ));
     	sin_v=my_sin( ( (t*360*f)+(2-i)*(120) ));
@@ -247,8 +271,8 @@ void TIM14_IRQHandler(void)
     if(t*f>1){
     	t=0;
     }
-*/
 
+/*
   int h3=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2);
   int h1=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3);
   int h2=HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4);
@@ -294,6 +318,11 @@ void TIM14_IRQHandler(void)
 		break;
 
   }
+//*/
+
+  int n=sprintf(debug_data,"%d,%d,%d,%d,%d\r\n",(int)pulse,hall_state,aADCxConvertedData[0],aADCxConvertedData[1],aADCxConvertedData[2]);
+  //int n=sprintf(debug_data,"%d\r\n",(int)pulse);
+  Debug(debug_data, n);
 
 
   /* USER CODE END TIM14_IRQn 0 */

@@ -81,11 +81,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
           HAL_UART_Receive_IT(&huart1, (uint8_t*) &UART1_Data, 1);
           switch(UART1_Data){
           case 'q':
-        	  if(v<4000)v+=50;
+        	  if(v<4000)v+=10;
         	  conf_v(v);
         	  break;
           case 'z':
-        	  if(v>=50)v-=50;
+        	  if(v>0)v-=10;
+        	  else v=0;
         	  conf_v(v);
         	  break;
           }
@@ -186,6 +187,7 @@ int main(void)
 
     HAL_TIM_Encoder_Start(&htim2,TIM_CHANNEL_ALL);
 
+	HAL_TIM_Base_Start_IT(&htim1);
 	HAL_TIM_Base_Start_IT(&htim14);
 
     HAL_UART_Receive_IT(&huart1, (uint8_t*) &UART1_Data, 1);
