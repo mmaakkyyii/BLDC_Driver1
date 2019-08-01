@@ -251,8 +251,10 @@ void TIM14_IRQHandler(void)
 	int16_t pulse=TIM2->CNT-ENC_ZERO;
 	TIM2->CNT=ENC_ZERO;
 
-	static int v=1000;
+	static int v=0;
+	if(pulse<10&&pulse>-10)conf_v(-conf_v(0,-1),1);
 	v=conf_v(0,-1);
+
 
 	static float t=0;
 //	v++;
@@ -366,7 +368,7 @@ void TIM14_IRQHandler(void)
   }
 //*/
 
-  int n=sprintf(debug_data,"%d,%d,%d,%d,%d\r\n",(int)pulse,hall_state,aADCxConvertedData[0],aADCxConvertedData[1],aADCxConvertedData[2]);
+  int n=sprintf(debug_data,"%d,%d,%d\r\n",(int)pulse,hall_state,v);
   //int n=sprintf(debug_data,"%d\r\n",(int)pulse);
   Debug(debug_data, n);
 

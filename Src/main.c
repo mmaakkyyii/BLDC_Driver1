@@ -63,8 +63,10 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+#define init_v (250)
+
 int conf_v(int _v,int set){
-	static int v=0;
+	static int v=init_v;
 	if(set==1)v=_v;
 
 	return v;
@@ -76,16 +78,25 @@ char UART1_Data;
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
-	static int v=0;
+	static int v=init_v;
      if(UartHandle->Instance==USART1){
           HAL_UART_Receive_IT(&huart1, (uint8_t*) &UART1_Data, 1);
           switch(UART1_Data){
           case 'q':
-        	  if(v<4000)v+=30;
+        	  if(v<4000)v+=2;
         	  conf_v(v,1);
         	  break;
           case 'z':
-        	  if(v>-4000)v-=30;
+        	  if(v>-4000)v-=2;
+        	  else v=0;
+        	  conf_v(v,1);
+        	  break;
+          case 'w':
+        	  if(v<4000)v+=10;
+        	  conf_v(v,1);
+        	  break;
+          case 'x':
+        	  if(v>-4000)v-=10;
         	  else v=0;
         	  conf_v(v,1);
         	  break;
